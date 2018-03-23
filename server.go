@@ -1,4 +1,4 @@
-package server
+package main
 
 import (
 	"log"
@@ -12,7 +12,9 @@ func main() {
 	if err != nil {
 		log.Fatal("Error Loading Enironment Variables")
 	}
+
 	a := App{}
+
 	a.Initialize(
 		os.Getenv("APP_DB_USERNAME"),
 		os.Getenv("APP_DB_PASSWORD"),
