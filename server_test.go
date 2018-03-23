@@ -54,10 +54,11 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 }
 
 func ensureTableExists() {
+	var c contacts.Contact
 	v, _ := a.DB.Exec("SELECT * from PEOPLE") //err != nil {
 	//	log.Fatal(err)
 	//}
-	log.Fatal(v)
+	log.Fatal(v.scan(&c.FirstName, &c.LastName, &c.Email, &c.Phone))
 }
 
 func clearTable() {
