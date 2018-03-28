@@ -159,14 +159,47 @@ func DeleteContact(db *sql.DB) http.HandlerFunc {
 func UpdateCSVContacts(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		file, _, err := r.FormFile("contacts")
-		if err != nil {
-			fmt.Println(err)
+		newFile, _ := ioutil.ReadAll(file)
+		tempFile, _ := ioutil.TempFile("", "contacts")
+		e := ioutil.WriteFile(tempFile.Name(), newFile, 0644)
+		if e != nil {
+			respond.With(w, r, http.StatusBadRequest, nil, e)
 			return
 		}
-		defer file.Close()
+		if err != nil {
+			respond.With(w, r, http.StatusBadRequest, nil, err)
+			return
+		}
+		// "INSERT INTO contacts() VAlUES () on DUPLICATE KEY UPDATE name, age"
+		query := fmt.Sprintf("COPY contacts_imports(first_name, last_name, id, email, phone) FROM '%s' DELIMITER ',' CSV;", tempFile.Name())
 
-		db.Exec("COPY contacts(name, count, def) FROM 'file.csv' DELIMITER ',' CSV;")
-
+		if _, er := db.Exec(`CREATE TEMP TABLE contacts_imports
+				(
+				id VARCHAR(64),
+				first_name VARCHAR(50),
+				last_name VARCHAR(50),
+				email VARCHAR(50),
+				phone VARCHAR(50),
+				CONSTRAINT contact_pkey PRIMARY KEY (id),
+				CONSTRAINT email_id UNIQUE("email")
+				)`); er != nil {
+			respond.With(w, r, http.StatusBadRequest, nil, er)
+			return
+		}
+		if _, er := db.Exec(query); er != nil {
+			respond.With(w, r, http.StatusBadRequest, nil, er)
+			return
+		}
+		if _, er := db.Exec(`
+			insert into posts(id, first_name, last_name, email, phone)
+			select id, first_name, last_name, email, phone
+			from contact_imports
+			on DUPLICATE KEY UPDATE
+			update first_name, last_name, email, phone, id
+			`); er != nil {
+			respond.With(w, r, http.StatusBadRequest, nil, er)
+			return
+		}
 	}
 }
 

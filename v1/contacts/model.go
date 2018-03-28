@@ -31,7 +31,6 @@ func (c *Contact) updateContact(db *sql.DB) error {
 	return err
 }
 func (c *Contact) updateCSVContact(db *sql.DB) error {
-	// "INSERT INTO contact () VAlUES () on DUPLICATE KEY UPDATE name, age"
 	_, err := db.Exec(
 		"UPDATE contacts SET first_name=$1, last_name=$2 email=$3 phone=$4 WHERE id=$5; INSERT INTO contacts (first_name, last_name, email, phone) SELECT $1, $2, $3, $4 WHERE NOT EXISTS (SELECT 1 FROM table WHERE id=$5);")
 	return err
