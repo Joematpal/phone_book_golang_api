@@ -161,12 +161,12 @@ func UpdateCSVContacts(db *sql.DB) http.HandlerFunc {
 		file, _, err := r.FormFile("contacts")
 		newFile, _ := ioutil.ReadAll(file)
 		tempFile, _ := ioutil.TempFile("", "contacts")
-		e := ioutil.WriteFile(tempFile.Name(), newFile, 0644)
-		if e != nil {
-			respond.With(w, r, http.StatusBadRequest, nil, e)
+		if err != nil {
+			respond.With(w, r, http.StatusBadRequest, nil, err)
 			return
 		}
-		if err != nil {
+
+		if err = ioutil.WriteFile(tempFile.Name(), newFile, 0644); err != nil {
 			respond.With(w, r, http.StatusBadRequest, nil, err)
 			return
 		}
@@ -180,11 +180,11 @@ func UpdateCSVContacts(db *sql.DB) http.HandlerFunc {
 				phone VARCHAR(50)
 				);`
 		if _, er := db.Exec(tempTable); er != nil {
-			respond.With(w, r, 330, nil, er)
+			respond.With(w, r, http.StatusBadRequest, nil, er)
 			return
 		}
 		if _, er := db.Exec(query); er != nil {
-			respond.With(w, r, 331, nil, er)
+			respond.With(w, r, http.StatusBadRequest, nil, er)
 			return
 		}
 
@@ -197,7 +197,7 @@ func UpdateCSVContacts(db *sql.DB) http.HandlerFunc {
     		email = EXCLUDED.email,
     		phone = EXCLUDED.phone;
 			`); er != nil {
-			respond.With(w, r, 333, nil, er)
+			respond.With(w, r, http.StatusBadRequest, nil, er)
 			return
 		}
 	}
