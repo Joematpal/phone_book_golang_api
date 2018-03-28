@@ -12,7 +12,7 @@ type Contact struct {
 	FirstName string    `json:"first_name" validate:"nonzero" creating:"nonzero"`
 	LastName  string    `json:"last_name" validate:"nonzero" creating:"nonzero"`
 	Email     string    `json:"email" validate:"min=8" creating:"min=8"`
-	Phone     string    `json:"phone" validate:"min=8" creating:"len=12,regexp=^([0-9]{3}-){2}[0-9]{4}$"`
+	Phone     string    `json:"phone" validate:"len=12" creating:"len=12,regexp=^([0-9]{3}-){2}[0-9]{4}$"`
 }
 
 func (c *Contact) getContact(db *sql.DB) error {

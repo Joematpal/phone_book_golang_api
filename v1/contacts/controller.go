@@ -171,6 +171,7 @@ func UpdateCSVContacts(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		query := fmt.Sprintf("COPY contacts_imports FROM '%s' DELIMITER ',' CSV HEADER;", tempFile.Name())
+
 		tempTable := `DROP TABLE IF EXISTS contacts_imports; CREATE TEMP TABLE contacts_imports
 				(
 				id VARCHAR(64),
@@ -179,16 +180,16 @@ func UpdateCSVContacts(db *sql.DB) http.HandlerFunc {
 				email VARCHAR(50),
 				phone VARCHAR(50)
 				);`
-		if _, er := db.Exec(tempTable); er != nil {
-			respond.With(w, r, http.StatusBadRequest, nil, er)
+		if _, err := db.Exec(tempTable); err != nil {
+			respond.With(w, r, http.StatusBadRequest, nil, err)
 			return
 		}
-		if _, er := db.Exec(query); er != nil {
-			respond.With(w, r, http.StatusBadRequest, nil, er)
+		if _, err := db.Exec(query); err != nil {
+			respond.With(w, r, http.StatusBadRequest, nil, err)
 			return
 		}
 
-		if _, er := db.Exec(`insert into contacts(id, first_name, last_name, email, phone)
+		if _, err := db.Exec(`insert into contacts(id, first_name, last_name, email, phone)
 			select id, first_name, last_name, email, phone
 			from contacts_imports
 			on conflict(id) do update set
@@ -196,8 +197,8 @@ func UpdateCSVContacts(db *sql.DB) http.HandlerFunc {
     		last_name = EXCLUDED.last_name,
     		email = EXCLUDED.email,
     		phone = EXCLUDED.phone;
-			`); er != nil {
-			respond.With(w, r, http.StatusBadRequest, nil, er)
+			`); err != nil {
+			respond.With(w, r, http.StatusBadRequest, nil, err)
 			return
 		}
 	}
