@@ -3,8 +3,9 @@ create table PEOPLE (
 	first_name VARCHAR(50),
 	last_name VARCHAR(50),
 	email VARCHAR(50),
-	phone VARCHAR(50)
-	CONSTRAINT people_pkey PRIMARY KEY (id)
+	phone VARCHAR(50),
+	CONSTRAINT contact_pkey PRIMARY KEY (id),
+	CONSTRAINT email_id UNIQUE("email")
 );
 insert into PEOPLE (id, first_name, last_name, email, phone) values ('05a8d664-cbbb-4404-875f-5242a35c49a9', 'Baxter', 'Parminter', 'bparminter0@disqus.com', '504-636-7086');
 insert into PEOPLE (id, first_name, last_name, email, phone) values ('4b196e1c-10e6-4cdf-a61d-e6e2073188de', 'Darb', 'Topp', 'dtopp1@irs.gov', '640-304-2342');
