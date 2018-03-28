@@ -170,34 +170,34 @@ func UpdateCSVContacts(db *sql.DB) http.HandlerFunc {
 			respond.With(w, r, http.StatusBadRequest, nil, err)
 			return
 		}
-		// "INSERT INTO contacts() VAlUES () on DUPLICATE KEY UPDATE name, age"
-		query := fmt.Sprintf("COPY contacts_imports(first_name, last_name, id, email, phone) FROM '%s' DELIMITER ',' CSV;", tempFile.Name())
-
-		if _, er := db.Exec(`CREATE TEMP TABLE contacts_imports
+		query := fmt.Sprintf("COPY contacts_imports FROM '%s' DELIMITER ',' CSV HEADER;", tempFile.Name())
+		tempTable := `DROP TABLE IF EXISTS contacts_imports; CREATE TEMP TABLE contacts_imports
 				(
 				id VARCHAR(64),
 				first_name VARCHAR(50),
 				last_name VARCHAR(50),
 				email VARCHAR(50),
-				phone VARCHAR(50),
-				CONSTRAINT contact_pkey PRIMARY KEY (id),
-				CONSTRAINT email_id UNIQUE("email")
-				)`); er != nil {
-			respond.With(w, r, http.StatusBadRequest, nil, er)
+				phone VARCHAR(50)
+				);`
+		if _, er := db.Exec(tempTable); er != nil {
+			respond.With(w, r, 330, nil, er)
 			return
 		}
 		if _, er := db.Exec(query); er != nil {
-			respond.With(w, r, http.StatusBadRequest, nil, er)
+			respond.With(w, r, 331, nil, er)
 			return
 		}
-		if _, er := db.Exec(`
-			insert into posts(id, first_name, last_name, email, phone)
+
+		if _, er := db.Exec(`insert into contacts(id, first_name, last_name, email, phone)
 			select id, first_name, last_name, email, phone
-			from contact_imports
-			on DUPLICATE KEY UPDATE
-			update first_name, last_name, email, phone, id
+			from contacts_imports
+			on conflict(id) do update set
+    		first_name = EXCLUDED.first_name,
+    		last_name = EXCLUDED.last_name,
+    		email = EXCLUDED.email,
+    		phone = EXCLUDED.phone;
 			`); er != nil {
-			respond.With(w, r, http.StatusBadRequest, nil, er)
+			respond.With(w, r, 333, nil, er)
 			return
 		}
 	}
