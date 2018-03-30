@@ -6,30 +6,39 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/Joematpal/phone_book_golang_api/v1"
+	"github.com/gorilla/mux"
 )
 
-var a App
-
 func TestMain(m *testing.M) {
-	a = App{}
+	host := os.Getenv("TEST_DB_HOST")
+	port := os.Getenv("TEST_DB_PORT")
 	username := os.Getenv("TEST_DB_USERNAME")
 	password := os.Getenv("TEST_DB_PASSWORD")
 	dbname := os.Getenv("TEST_DB_NAME")
+	router := mux.NewRouter()
 
-	a.Initialize(
+	v = v1.V1{}
+
+	v.Initialize(
+		host,
+		port,
 		username,
 		password,
 		dbname,
+		router,
 	)
 
-	ensureTableExists()
+	// ensureTableExists()
 
 	code := m.Run()
 
-	clearTable()
+	// clearTable()
 
 	os.Exit(code)
 }
+
 func TestTableExists(t *testing.T) {
 	ensureTableExists()
 }
@@ -54,31 +63,29 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 }
 
 func ensureTableExists() {
-	var c contacts.Contact
-	v, _ := a.DB.Exec("SELECT * from PEOPLE") //err != nil {
-	//	log.Fatal(err)
-	//}
-	log.Fatal(v.scan(&c.FirstName, &c.LastName, &c.Email, &c.Phone))
+	if _, err := v.DB.Exec(tableCreationQuery); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func clearTable() {
-	a.DB.Exec("DELETE FROM people")
-	a.DB.Exec("ALTER SEQUENCE people_id_seq RESTART WITH 1")
+	v.DB.Exec("DELETE FROM contact")
 }
 
 func executeRequest(req *http.Request) *httptest.ResponseRecorder {
 	rr := httptest.NewRecorder()
-	a.Router.ServeHTTP(rr, req)
+	// v1.Router.ServeHTTP(rr, req)
 
 	return rr
 }
 
-const tableCreationQuery = `CREATE TABLE IF NOT EXISTS people
+const tableCreationQuery = `CREATE TABLE IF NOT EXISTS contacts
 (
 	id VARCHAR(64),
 	first_name VARCHAR(50),
 	last_name VARCHAR(50),
 	email VARCHAR(50),
 	phone VARCHAR(50),
-	CONSTRAINT people_pkey PRIMARY KEY (id)
+	CONSTRAINT contact_pkey PRIMARY KEY (id),
+	CONSTRAINT email_id UNIQUE("email")
 )`
